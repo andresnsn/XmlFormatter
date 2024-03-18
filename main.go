@@ -39,17 +39,15 @@ func streaming() {
 
 		formattedToday := today.Format("020106")
 
-		openedFile, _ := os.Open(file.Name())
+		openedFile, _ := os.Open("./files/" + file.Name())
 
 		xmlDecoder := xml.NewDecoder(openedFile)
 
-		createdFile, _ := os.Create("BSPD.DB.YF.T520B3D.D1R" + file.Name()[26:31] + ".DX" + formattedToday + ".L00300.CPENV")
+		createdFile, _ := os.Create("BSPD.DB.YF.T520B3D.D1R" + file.Name() + ".DX" + formattedToday + ".L00300.CPENV")
 
-		fmt.Println("BREAK 1")
 		xmlEncoder := xml.NewEncoder(createdFile)
-		fmt.Println("BREAK 2")
+
 		xmlEncoder.Indent("", "  ")
-		fmt.Println("BREAK 3")
 
 		for {
 			tokenXml, err := xmlDecoder.RawToken()
@@ -59,7 +57,7 @@ func streaming() {
 			}
 
 			if err != nil {
-				log.Println("Deu erro")
+				log.Println(err)
 				break
 			}
 
@@ -71,13 +69,16 @@ func streaming() {
 					continue
 				}
 			}
+
 			xmlEncoder.EncodeToken(tokenXml)
+
 		}
 
 		if err := xmlEncoder.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}
+
 }
 
 func batch() {
