@@ -9,51 +9,74 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-xmlfmt/xmlfmt"
 )
 
 func main() {
+	// files, _ := os.ReadDir("./files")
+
+	// today := time.Now()
+
+	// formattedToday := today.Format("020106")
+
+	// for _, file := range files {
+	// 	fmt.Println("BSPD.DB.YF.T520B3D.D1R" + file.Name()[26:31] + ".DX" + formattedToday + ".L00300.CPENV")
+	// }
+
 	streaming()
-	batch()
 }
 func streaming() {
-	openedFile, _ := os.Open("small_file.xml")
 
-	xmlDecoder := xml.NewDecoder(openedFile)
+	files, _ := os.ReadDir("./files")
 
-	createdFile, _ := os.Create("streaming.xml")
+	for _, file := range files {
 
-	xmlEncoder := xml.NewEncoder(createdFile)
+		fmt.Println("Arquivo encontrado: " + file.Name())
 
-	xmlEncoder.Indent("", "  ")
+		today := time.Now()
 
-	for {
-		tokenXml, err := xmlDecoder.RawToken()
+		formattedToday := today.Format("020106")
 
-		if errors.Is(err, io.EOF) {
-			break
-		}
+		openedFile, _ := os.Open(file.Name())
 
-		if err != nil {
-			log.Println(err)
-			break
-		}
+		xmlDecoder := xml.NewDecoder(openedFile)
 
-		switch t := tokenXml.(type) {
-		case xml.ProcInst:
-			continue
-		case xml.StartElement:
-			if t.Name.Local == "ARRCDOC" {
-				continue
+		createdFile, _ := os.Create("BSPD.DB.YF.T520B3D.D1R" + file.Name()[26:31] + ".DX" + formattedToday + ".L00300.CPENV")
+
+		fmt.Println("BREAK 1")
+		xmlEncoder := xml.NewEncoder(createdFile)
+		fmt.Println("BREAK 2")
+		xmlEncoder.Indent("", "  ")
+		fmt.Println("BREAK 3")
+
+		for {
+			tokenXml, err := xmlDecoder.RawToken()
+
+			if errors.Is(err, io.EOF) {
+				break
 			}
+
+			if err != nil {
+				log.Println("Deu erro")
+				break
+			}
+
+			switch t := tokenXml.(type) {
+			case xml.ProcInst:
+				continue
+			case xml.StartElement:
+				if t.Name.Local == "ARRCDOC" {
+					continue
+				}
+			}
+			xmlEncoder.EncodeToken(tokenXml)
 		}
 
-		xmlEncoder.EncodeToken(tokenXml)
-	}
-
-	if err := xmlEncoder.Close(); err != nil {
-		log.Fatal(err)
+		if err := xmlEncoder.Close(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
